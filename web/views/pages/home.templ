@@ -1,11 +1,82 @@
 package pages
 
-import "workshop/internal/domain/sighting"
+import (
+	"strconv"
+	"workshop/internal/domain/sighting"
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+)
 
 templ Home(sightings []sighting.Sighting) {
-	// TODO: Implement
-	// 1. Wrap the page in layout.Base, giving it a title.
-	// 2. Say so when there are no sightings, and show the total when there are.
-	// 3. Render a components.SightingCard for each sighting.
-	// Think about error handling.
+	@layout.Base(layout.BaseProps{
+		Title:       "Savanna Sightings",
+		Description: "Wild animal sightings from Kenya and beyond.",
+	}) {
+		{{ p := NewHomeProps(sightings) }}
+		<section class="hero">
+			@components.ThreeScene(components.ThreeSceneProps{Scene: "savanna", Backdrop: true})
+			<div class="hero__content">
+				<p class="eyebrow">Stay wild in Kenya</p>
+				<h1 class="hero__title">Dusk on the<br/>Maasai Mara</h1>
+				<p class="hero__lead">Giraffe at the acacias, elephants at the waterhole. Every sighting people have shared, kept in one quiet ledger.</p>
+				<a class="button" href="#kenya">Explore sightings</a>
+			</div>
+			<a class="hero__scroll" href="#kenya" aria-label="Scroll to Kenya"><span></span></a>
+		</section>
+		<section class="kenya" id="kenya">
+			<div class="kenya__intro reveal">
+				<p class="eyebrow">Kenya · { strconv.Itoa(p.KenyaCount) } sightings</p>
+				<h2 class="section-title">From the Mara<br/>to Amboseli</h2>
+				if p.KenyaCount == 0 {
+					<p class="section-lead">No sightings from Kenya yet. They'll gather here as they come in.</p>
+				} else {
+					<p class="section-lead">{ strconv.Itoa(p.KenyaSpecies) } species seen across Kenya's plains, rivers and forests. The most often recorded:</p>
+					<ol class="tally">
+						for _, t := range p.KenyaTop {
+							<li>
+								<span class="tally__name">{ t.Name }</span>
+								<span class="tally__count">{ strconv.Itoa(t.Count) }</span>
+							</li>
+						}
+					</ol>
+				}
+			</div>
+			if len(p.Kenya) > 0 {
+				<ul class="features reveal" style="--reveal-delay: 150ms">
+					for _, s := range p.Kenya {
+						<li>
+							@components.FeatureCard(s)
+						</li>
+					}
+				</ul>
+			}
+		</section>
+		<section class="sightings-section" id="sightings">
+			<header class="sightings-section__head reveal">
+				<div>
+					<p class="eyebrow">The full ledger</p>
+					<h2 class="section-title">Every sighting</h2>
+				</div>
+				if p.Summary.Sightings > 0 {
+					<dl class="stats">
+						<div><dt>Sightings</dt><dd>{ strconv.Itoa(p.Summary.Sightings) }</dd></div>
+						<div><dt>Species</dt><dd>{ strconv.Itoa(p.Summary.Species) }</dd></div>
+						<div><dt>Countries</dt><dd>{ strconv.Itoa(p.Summary.Countries) }</dd></div>
+						<div><dt>Observers</dt><dd>{ strconv.Itoa(p.Summary.Recorders) }</dd></div>
+					</dl>
+				}
+			</header>
+			if len(sightings) == 0 {
+				<p class="empty">No sightings have been ingested yet.</p>
+			} else {
+				<ul class="sightings">
+					for _, s := range sightings {
+						<li>
+							@components.SightingCard(s)
+						</li>
+					}
+				</ul>
+			}
+		</section>
+	}
 }

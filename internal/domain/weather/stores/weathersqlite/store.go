@@ -30,6 +30,19 @@ func (s Store) Find(ctx context.Context, id uuid.UUID) (weather.Weather, error) 
 // Create persists a new weather record under id, or returns
 // weather.ErrAlreadyExists if one is already there.
 func (s Store) Create(ctx context.Context, id uuid.UUID, in weather.CreateParams) (weather.Weather, error) {
-	// TODO: Implement
-	return weather.Weather{}, errors.New("weathersqlite: Create not implemented")
+	create, err := s.queries.WeatherCreate(ctx, db.WeatherCreateParams{
+		ID:                  id,
+		Temperature:         in.Temperature.Actual,
+		ApparentTemperature: in.Temperature.Apparent,
+	})
+	if err != nil {
+		return weather.Weather{}, err
+	}
+	return weather.Weather{
+		ID: create.ID,
+		Temperature: weather.Temperature{
+			Actual:   create.Temperature,
+			Apparent: create.ApparentTemperature,
+		},
+	}, nil
 }

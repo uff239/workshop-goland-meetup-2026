@@ -12,39 +12,88 @@ import (
 
 templ SightingCard(s sighting.Sighting) {
 	<article class="card">
-		<!-- Header -->
-		<header class="card__header">
-			<h2>{ displayName(s.Species) }</h2>
+		@cardPhoto(s, "card__photo")
+		<div class="card__body">
+			<p class="eyebrow card__eyebrow">
+				{ cmp.Or(s.Location.Country, "Location unknown") } · <time datetime={ s.HappenedAt.Format("2006-01-02") }>{ s.HappenedAt.Format("2 Jan 2006") }</time>
+			</p>
+			<h3 class="card__title">{ DisplayName(s.Species) }</h3>
 			if s.Species.ScientificName != "" {
 				<p class="card__scientific">{ s.Species.ScientificName }</p>
 			}
-		</header>
-		<!-- Meta -->
-		<dl class="card__meta">
-			<dt>Seen</dt>
-			<dd>{ s.HappenedAt.Format("2 January 2006") }</dd>
-			<dt>Where</dt>
-			<dd>{ place(s.Location) }</dd>
-			if s.IndividualCount != nil {
-				<dt>Count</dt>
-				<dd>{ individuals(*s.IndividualCount) }</dd>
-			}
-			if s.RecordedBy != "" {
-				<dt>Recorded by</dt>
-				<dd>{ s.RecordedBy }</dd>
-			}
-		</dl>
-		<!-- Gallery -->
-		<div class="card__gallery">
-			@Gallery(s.Media)
+			<dl class="card__meta">
+				<div>
+					<dt>Where</dt>
+					<dd>{ place(s.Location) }</dd>
+				</div>
+				if s.IndividualCount != nil {
+					<div>
+						<dt>Count</dt>
+						<dd>{ individuals(*s.IndividualCount) }</dd>
+					</div>
+				}
+				<div>
+					<dt>Observed by</dt>
+					<dd>{ cmp.Or(s.RecordedBy, "Unrecorded") }</dd>
+				</div>
+			</dl>
 		</div>
 	</article>
 }
 
-// displayName prefers the name a reader would recognise, falling back
+templ FeatureCard(s sighting.Sighting) {
+	<article class="feature">
+		@cardPhoto(s, "feature__photo")
+		<div class="feature__body">
+			<p class="eyebrow">{ place(s.Location) }</p>
+			<h3 class="feature__title">{ DisplayName(s.Species) }</h3>
+			<p class="feature__meta">
+				<time datetime={ s.HappenedAt.Format("2006-01-02") }>{ s.HappenedAt.Format("2 January 2006") }</time>
+				if s.RecordedBy != "" {
+					· { s.RecordedBy }
+				}
+			</p>
+		</div>
+	</article>
+}
+
+templ cardPhoto(s sighting.Sighting, class string) {
+	if m := Photo(s.Media); m.URL != "" {
+		<figure class={ class }>
+			<img src={ m.URL } alt={ cmp.Or(m.Title, m.Description, DisplayName(s.Species)) } loading="lazy" decoding="async"/>
+			if m.Creator != "" {
+				<figcaption>© { m.Creator }</figcaption>
+			}
+		</figure>
+	} else {
+		<div class={ class, "is-empty" } aria-hidden="true">
+			<span>{ initial(s.Species) }</span>
+		</div>
+	}
+}
+
+// DisplayName prefers the name a reader would recognise, falling back
 // through the taxonomy as GBIF records thin out.
-func displayName(sp species.Species) string {
+func DisplayName(sp species.Species) string {
 	return cmp.Or(sp.VernacularName, sp.CanonicalName, sp.ScientificName, "Unknown species")
+}
+
+// Photo returns the first still image, or a zero Media when there's none.
+func Photo(media []sighting.Media) sighting.Media {
+	for _, m := range media {
+		if m.Type == "StillImage" && m.URL != "" {
+			return m
+		}
+	}
+	return sighting.Media{}
+}
+
+// initial is the first letter of the species' name, for cards without a photo.
+func initial(sp species.Species) string {
+	for _, r := range DisplayName(sp) {
+		return strings.ToUpper(string(r))
+	}
+	return "?"
 }
 
 // place joins whichever parts of the location GBIF supplied.

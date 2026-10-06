@@ -1,7 +1,8 @@
 package layout
 
 type BaseProps struct {
-	Title string
+	Title       string
+	Description string
 }
 
 templ Base(props BaseProps) {
@@ -10,13 +11,57 @@ templ Base(props BaseProps) {
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<link rel="icon" href="/assets/images/logo.svg" type="image/svg+xml"/>
+			<link rel="manifest" href="/assets/manifest.json"/>
+			<meta name="theme-color" content="#0f0b08"/>
 			<title>{ props.Title }</title>
+			if props.Description != "" {
+				<meta name="description" content={ props.Description }/>
+			}
+			<script>document.documentElement.classList.add('js')</script>
+			<script type="importmap">
+				{
+					"imports": {
+						"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+						"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+					}
+				}
+			</script>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap"/>
 			<link rel="stylesheet" href="/assets/css/app.css"/>
+			<link rel="stylesheet" href="/assets/css/threejs.css"/>
+			<link rel="stylesheet" href="/assets/css/reveal.css"/>
+			<script src="/assets/js/reveal.js" defer></script>
 		</head>
 		<body>
-			<main class="container">
+			<a class="skip" href="#main">Skip to content</a>
+			<header class="site-header">
+				<a class="logo" href="/">
+					<img src="/assets/images/logo.svg" alt="Savanna Sightings, home" width="40" height="40"/>
+					<span class="logo__word">Savanna <em>Sightings</em></span>
+				</a>
+				<nav class="nav" aria-label="Main">
+					<a href="/#kenya">Kenya</a>
+					<a href="/#sightings">Sightings</a>
+					<a href="/#about">About</a>
+				</nav>
+			</header>
+			<main id="main">
 				{ children... }
 			</main>
+			<footer class="site-footer" id="about">
+				<div class="site-footer__inner">
+					<div>
+						<p class="eyebrow">About the ledger</p>
+						<p class="site-footer__lead">A slow, careful record of the wild animals people have seen and shared, from the plains of the Maasai Mara to rivers half a world away.</p>
+					</div>
+					<p class="site-footer__credit">
+						Occurrence data from <a href="https://www.gbif.org" rel="noopener">GBIF</a>, shared by the observers named on each record.
+					</p>
+				</div>
+			</footer>
 			<script src="/assets/js/app.js"></script>
 		</body>
 	</html>

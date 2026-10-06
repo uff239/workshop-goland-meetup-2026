@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"workshop/internal/domain/sighting"
+	"workshop/web/views/pages"
 )
 
 type SightingsLister interface {
@@ -17,8 +17,20 @@ func Home(logger *slog.Logger, lister SightingsLister) http.HandlerFunc {
 		// TODO: Implement
 		// 1. Call the sightings service to List.
 		// 2. Set content type to text/html.
-		// 3. Render home page.
+		// 3. Render home page
 		ctx := r.Context()
-		logger.InfoContext(ctx, fmt.Sprintf("handlers: homepage: %+v", r.URL))
+
+		list, err := lister.List(ctx, sighting.ListFilter{
+			Limit: 10,
+		})
+		if err != nil {
+			return
+		}
+
+		err = pages.Home(list).Render(ctx, w)
+		if err != nil {
+			return
+		}
+
 	}
 }
